@@ -210,3 +210,87 @@ class Solution {
     }
 }
 ```
+
+
+
+# Leetcode 3 无重复字符的最长子串 （滑动窗口）
+
+> 给定一个字符串 `s` ，请你找出其中不含有重复字符的 **最长子串** 的长度。
+>
+> 
+>
+> **示例 1:**
+>
+> ```
+> 输入: s = "abcabcbb"
+> 输出: 3 
+> 解释: 因为无重复字符的最长子串是 "abc"，所以其长度为 3。
+> ```
+>
+> **示例 2:**
+>
+> ```
+> 输入: s = "bbbbb"
+> 输出: 1
+> 解释: 因为无重复字符的最长子串是 "b"，所以其长度为 1。
+> ```
+>
+> **示例 3:**
+>
+> ```
+> 输入: s = "pwwkew"
+> 输出: 3
+> 解释: 因为无重复字符的最长子串是 "wke"，所以其长度为 3。
+>      请注意，你的答案必须是 子串 的长度，"pwke" 是一个子序列，不是子串。
+> ```
+
+## 题目分析
+
+拿到这个题目后，可能一般来说第一反应是可以用暴力求解，弄两个for循环配合一个hashmap即可解决，但是这样做太慢了，所以可以分析一下题干
+
+题目要求是不重复的最长子串，假如我们把子串看成一个队列，那么这个队列里面必须只有不重复的元素，比如示例1，当队列为abc的时候，满足题意，然后再进一个abca，不满足题意了，这个时候就要记录一下abc的长度，并且把最左边的a排出去，然后右边继续添加元素，这是不是就很像一个队列在滑动的向前走
+
+<center><img src="./pic/leetcode3.png"></center>
+
+所以整个流程应该是这样的：
+
+1. 定义一个map，max，left
+2. 循环遍历字符串
+3. 如果发现map中存在当前字符，将left右移到重复元素的下一位
+4. 记录当前长度和max作比较
+5. 进入下一次循环
+
+## 代码实现
+
+```java
+class Solution {
+    public int lengthOfLongestSubstring(String s) {
+        Map<Character, Integer> map = new HashMap<>(16);
+        int max = 0;
+        int left = 0;
+
+        for (int i = 0; i < s.length(); i++) {
+            if(map.containsKey(s.charAt(i))){
+                left = Math.max(left, map.get(s.charAt(i)) + 1);
+            }
+
+            map.put(s.charAt(i), i);
+            max = Math.max(max, i-left+1);
+        }
+
+        return max;
+    }
+}
+```
+
+注意这个left是要移动到重复元素的下一位，所以是map.get(s.charAt(i)) + 1
+
+这个时候可能会产生疑问，就算你left移动了，但是你map中的元素还是存在的，比如pwwepw
+
+你的队列到pww的时候，肯定要把pw都舍去，这个时候left应该指向w，但是你的map中还是存在p这个字符
+
+这个时候就要靠这条代码了 left = Math.max(left, map.get(s.charAt(i)) + 1)
+
+map记录的时候字符和其所在的下标，也就是说left其实取的是最大的那个下标，就算后面到了wep的字符p时，会去进入这条语句，那么这个p在map中的下标之前就存放的是0，明显是要小于left的，所以left不会变，然后走完这条语句，map就会更新这个字符的下标，所以现在p的下标就不是0了
+
+这条语句的作用用一句话概括就是 防止之前的离开队列的元素对现在的判断产生影响，这也就是为什么要取一个最大值，不直接left = map.get(s.charAt(i)) + 1的原因
