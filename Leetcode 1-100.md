@@ -294,3 +294,136 @@ class Solution {
 map记录的时候字符和其所在的下标，也就是说left其实取的是最大的那个下标，就算后面到了wep的字符p时，会去进入这条语句，那么这个p在map中的下标之前就存放的是0，明显是要小于left的，所以left不会变，然后走完这条语句，map就会更新这个字符的下标，所以现在p的下标就不是0了
 
 这条语句的作用用一句话概括就是 防止之前的离开队列的元素对现在的判断产生影响，这也就是为什么要取一个最大值，不直接left = map.get(s.charAt(i)) + 1的原因
+
+
+
+# Leetcode 6 Z字形变化（字符串）
+
+> 将一个给定字符串 `s` 根据给定的行数 `numRows` ，以从上往下、从左到右进行 Z 字形排列。
+>
+> 比如输入字符串为 `"PAYPALISHIRING"` 行数为 `3` 时，排列如下：
+>
+> ```
+> P   A   H   N
+> A P L S I I G
+> Y   I   R
+> ```
+>
+> 之后，你的输出需要从左往右逐行读取，产生出一个新的字符串，比如：`"PAHNAPLSIIGYIR"`。
+>
+> 请你实现这个将字符串进行指定行数变换的函数：
+>
+> ```
+> string convert(string s, int numRows);
+> ```
+>
+> 
+>
+> **示例 1：**
+>
+> ```
+> 输入：s = "PAYPALISHIRING", numRows = 3
+> 输出："PAHNAPLSIIGYIR"
+> ```
+>
+> **示例 2：**
+>
+> ```
+> 输入：s = "PAYPALISHIRING", numRows = 4
+> 输出："PINALSIGYAHRPI"
+> 解释：
+> P     I    N
+> A   L S  I G
+> Y A   H R
+> P     I
+> ```
+>
+> **示例 3：**
+>
+> ```
+> 输入：s = "A", numRows = 1
+> 输出："A"
+> ```
+
+## 题目分析
+
+第一时间想到的是暴力模拟求解，题目说是Z字形变换，那么也就是说我们只需要模拟一个Z字形的遍历过程即可
+
+定义一个list代表行，然后一开始是从上向下遍历，遍历到头之后就是从下往上遍历，一直遍历完整个字符串
+
+假设有n行，那么应该就是s[1] - s[n] 然后 s[n] - s[1] 这样依次去遍历
+
+## 代码实现
+
+```java
+class Solution {
+    public String convert(String s, int numRows) {
+        //如果只有一行或者0行，那么就说明不需要处理什么，直接返回s即可
+        if(numRows < 2) return s;
+        //这里定义一个list，泛型指定为StringBuilder，用来定义每一行的字符串
+        List<StringBuilder> lists = new ArrayList<>();
+        //初始化每一行字符串
+        for (int i = 0; i < numRows; i++) {
+            lists.add(new StringBuilder());
+        }
+
+        //j代表当前是第几行
+        int j = 0;
+        //定义一个flag，用于区分我们当前是要向下走还是向上走
+        boolean flag = true;
+        for (int i = 0; i < s.length(); i++) {
+            //将当前字母加入即可
+            lists.get(j).append(s.charAt(i));
+            //如果flag为真，那么说明当前是要向下走阶段，j++，反之则j--
+            if(flag) j++;
+            else j--;
+            //如果j大于了numrows-1，说明当前走到头了，需要向上走了
+            if(j > numRows - 1){
+                //由于最后一行已经添加过了，所以不能重复添加，从倒数第二行开始
+                j = numRows - 2;
+                //置为false代表需要向上走
+                flag = false;
+            }
+            //如果j小于0了，说明向上走到头了，需要向下走了
+            if(j < 0){
+                //一样的道理，第一行已经添加过了，需要从第二行开始
+                j = 1;
+                //置为true代表需要向下走
+                flag = true;
+            }
+        }
+        //最后将每一行的字符串拼接在一起进行返回
+        String res = "";
+        for (StringBuilder builder : lists) {
+            res += builder;
+        }
+
+        return res;
+    }
+}
+```
+
+```cmd
+解答成功:
+	执行耗时:9 ms,击败了39.43% 的Java用户
+	内存消耗:44.3 MB,击败了58.41% 的Java用户
+```
+
+在leetcode题解中，看到了一位网友是以数学找规律的思维解决这道题
+
+我们一开始都是以s的视角去看，想着遍历s，但是能不能直接把一行的规律找出来，这样循环也就会循环行数的次数，时间就会大大减少
+
+这位大佬找到了一行的规律，对于一个z字形，一行中只会有numrows， numrows+x，numrows+x+y三个
+
+其中x可以通过numrows*2-2计算出来，然后依次递减2，y从0开始依次递增2
+
+最后只需要判断一下一行中的下标有没有越界即可
+
+原帖地址：[耗时更低](https://leetcode.cn/problems/zigzag-conversion/solutions/2740724/hao-shi-geng-di-by-cranky-6oodallzgz-87zf)
+
+```cmd
+解答成功:
+	执行耗时:1 ms,击败了100.00% 的Java用户
+	内存消耗:43.7 MB,击败了84.55% 的Java用户
+```
+
